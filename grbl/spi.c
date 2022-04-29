@@ -10,7 +10,13 @@ void spi_init()
 {
     DDR_SPI &= ~((1<<DD_MOSI)|(1<<DD_MISO)|(1<<DD_SS)|(1<<DD_SCK));   // Set as input pins
 
-    PORT_SPI |= (1<<DD_MISO);   // Enable internal pull-up resistor
+    // Resistance value of internal pull-up is too strong for the PCB hardware. When enabled,
+    // the rise time on rising edges is longer than one bit period and thus returns garbage data.
+    // To attain accurate data reads from the MISO bus, the internal pull-up should be disabled and
+    // future PCB designs should incorporate an external pull-up to 5V with a resistance value of ~4.7k.
+    // For testing purposes, a resistor can be spliced in between the +5V pin (1) and MISO pin (2) of
+    // the PCB's programming header (P1).
+    // PORT_SPI |= (1<<DD_MISO);   // Enable internal pull-up resistor
     
     // Define the following pins as output
     DDR_SPI |= ((1<<DD_MOSI)|(1<<DD_SS)|(1<<DD_SCK));
