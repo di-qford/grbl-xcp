@@ -390,17 +390,19 @@
   #define RESET_MASK      ((1<<RESET_X_BIT) | (1<<RESET_Y_BIT) | (1<<RESET_DUAL_BIT) | (1<<RESET_Z_BIT))
 
   // Define the fault pins for the stepper motor drivers (open drain, need internal pull-up enabled)
-  #define FAULT_DDR       DDRK
-  #define FAULT_PORT      PORTK
-  #define FAULT_PIN       PINK
-  #define FAULT_X_BIT     0
-  #define FAULT_Y_BIT     1
-  #define FAULT_DUAL_BIT  2
-  #define FAULT_Z_BIT     3
-  #define FAULT_MASK      ((1<<FAULT_X_BIT) | (1<<FAULT_Y_BIT) | (1<<FAULT_DUAL_BIT) | (1<<FAULT_Z_BIT))
-  #define FAULT_INT       PCIE2
-  #define FAULT_INT_vect  PCINT2_vect
-  #define FAULT_PCMASK    PCMSK2
+  #define FAULT_DDR         DDRK
+  #define FAULT_PORT        PORTK
+  #define FAULT_PIN         PINK
+  #define FAULT_X_BIT       0
+  #define FAULT_Y_BIT       1
+  #define FAULT_DUAL_BIT    2
+  #define FAULT_Z_BIT       3
+  #define FAULT_MASK        ((1<<FAULT_X_BIT) | (1<<FAULT_Y_BIT) | (1<<FAULT_DUAL_BIT) | (1<<FAULT_Z_BIT))
+  #define FAULT_INT_REG     PCICR
+  #define FAULT_INT         PCIE2
+  #define FAULT_INT_vect    PCINT2_vect
+  #define FAULT_PCMASK_REG  PCMSK2
+  #define FAULT_PCMASK      ((1<<PCINT16)|(1<<PCINT17)|(1<<PCINT18)|(1<<PCINT19))
 
   // Define the stall detect pins for the stepper motor drivers (open drain, need internal pull-up enabled)
   #define STALL_DDR       DDRK
