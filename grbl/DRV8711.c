@@ -7,8 +7,8 @@ uint8_t calculate_ISGAIN();
 uint16_t setISGAIN_Mask( uint8_t gain_val );
 uint16_t setTORQUE_Mask( uint8_t gain_val );
 
-uint16_t setDRV8711( uint16_t address, uint16_t Data );
-uint16_t readDRV8711( uint16_t address );
+void setDRV8711( uint8_t axis_cs, uint16_t register_address, uint16_t Data );
+uint16_t readDRV8711( uint8_t axis_cs, uint16_t register_address );
 
 #define CTRL    0x0000
 #define TORQUE  0x1000
@@ -37,6 +37,21 @@ uint16_t readDRV8711( uint16_t address );
 #define STALL_VAL       0xA02             // Stall asserted after 4 steps, back-EMF divided by 8
 #define DRIVE_VAL       0x000             // OCP threshold of 250 mV, OCP deglitch time of 1 us, low-side gate drive time of 250 ns, high-side gate drive time of 250 ns,\
                                               low-side gate drive peak current of 100 mA, high-side gate drive peak current of 50 mA
+#define CLEAR_FAULTS    0x00              // Writes zeroes to the status register, clearing any pending faults on startup
+
+#ifdef X_CARVE_PRO
+  #define NUM_DRIVERS 4
+#else
+  /*  Uncomment the line corresponding to the 
+      number of unique, independent stepper motor drive
+      channels that exist on your set of hardware.
+  */
+  // #define NUM_DRIVERS 3
+  #define NUM_DRIVERS 4
+#endif
+
+// static uint8_t fault_pin_array[] = {FAULT_X_BIT, FAULT_Y_BIT, FAULT_DUAL_BIT, FAULT_Z_BIT};
+static uint8_t cs_pin_array[] = {CS_X_BIT, CS_Y_BIT, CS_DUAL_BIT, CS_Z_BIT};
 
 uint16_t x_ctrl_val = CTRL_DEFAULT;
 uint16_t y_ctrl_val = CTRL_DEFAULT;
@@ -59,7 +74,12 @@ void drv8711_init()
 
   STALL_DDR &= ~(STALL_MASK);   // Set the stall pins as inputs
   STALL_PORT |= (STALL_MASK);   // Enable internal pull-up resistors (active low signals)
-  
+
+  // Initialize fault pins for pin change interrupts
+  // Set the specific interrupts to be enabled due to fault pins in the corresponding mask register
+  FAULT_PCMASK_REG |= FAULT_PCMASK;
+  // Enable pin change interrupts to process
+  FAULT_INT_REG |= (1<<FAULT_INT);
 
   spi_init();  // initialize the SPI port
 
@@ -86,62 +106,66 @@ void drv8711_init()
   // setup x axis driver
   csBit = CS_X_BIT;
   delay_ms(20);  // give a little time before SPI starts
-  spi_send16bit( setDRV8711( CTRL, x_ctrl_val ), &CS_PORT, csBit );     // Bits 9:8 are calculated in setISGAIN_Mask, bits 6:3 are calculated in setMicrostep_Mask, and masked with CTRL_DEFAULT
-  spi_send16bit( setDRV8711( TORQUE, torque_val ), &CS_PORT, csBit );   // Bits 8:0 are calculated in setTORQUE_Mask, and masked with TORQUE_VAL_DEFAULT
-  spi_send16bit( setDRV8711( OFF, OFF_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( BLANK, BLANK_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( DECAY, DECAY_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( STALL, STALL_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( DRIVE, DRIVE_VAL ), &CS_PORT, csBit );
+  setDRV8711( csBit, CTRL, x_ctrl_val );      // Bits 9:8 are calculated in setISGAIN_Mask, bits 6:3 are calculated in setMicrostep_Mask, and masked with CTRL_DEFAULT
+  setDRV8711( csBit, TORQUE, torque_val );    // Bits 8:0 are calculated in setTORQUE_Mask, and masked with TORQUE_VAL_DEFAULT
+  setDRV8711( csBit, OFF, OFF_VAL );
+  setDRV8711( csBit, BLANK, BLANK_VAL );
+  setDRV8711( csBit, DECAY, DECAY_VAL );
+  setDRV8711( csBit, STALL, STALL_VAL );
+  setDRV8711( csBit, DRIVE, DRIVE_VAL );
+  setDRV8711( csBit, STATUS, CLEAR_FAULTS );
   
   // setup y axis drivers
   csBit = CS_Y_BIT;
   delay_ms(20); // give a little time before SPI starts
-  spi_send16bit( setDRV8711( CTRL, y_ctrl_val ), &CS_PORT, csBit );     // Bits 9:8 are calculated in setISGAIN_Mask, bits 6:3 are calculated in setMicrostep_Mask, and masked with CTRL_DEFAULT
-  spi_send16bit( setDRV8711( TORQUE, torque_val ), &CS_PORT, csBit );   // Bits 8:0 are calculated in setTORQUE_Mask, and masked with TORQUE_VAL_DEFAULT
-  spi_send16bit( setDRV8711( OFF, OFF_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( BLANK, BLANK_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( DECAY, DECAY_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( STALL, STALL_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( DRIVE, DRIVE_VAL ), &CS_PORT, csBit );
+  setDRV8711( csBit, CTRL, y_ctrl_val );      // Bits 9:8 are calculated in setISGAIN_Mask, bits 6:3 are calculated in setMicrostep_Mask, and masked with CTRL_DEFAULT
+  setDRV8711( csBit, TORQUE, torque_val );    // Bits 8:0 are calculated in setTORQUE_Mask, and masked with TORQUE_VAL_DEFAULT
+  setDRV8711( csBit, OFF, OFF_VAL );
+  setDRV8711( csBit, BLANK, BLANK_VAL );
+  setDRV8711( csBit, DECAY, DECAY_VAL );
+  setDRV8711( csBit, STALL, STALL_VAL );
+  setDRV8711( csBit, DRIVE, DRIVE_VAL );
+  setDRV8711( csBit, STATUS, CLEAR_FAULTS );
 
   csBit = CS_DUAL_BIT;
   delay_ms(20); // give a little time before SPI starts
-  spi_send16bit( setDRV8711( CTRL, dual_ctrl_val ), &CS_PORT, csBit );  // Bits 9:8 are calculated in setISGAIN_Mask, bits 6:3 are calculated in setMicrostep_Mask, and masked with CTRL_DEFAULT
-  spi_send16bit( setDRV8711( TORQUE, torque_val ), &CS_PORT, csBit );   // Bits 8:0 are calculated in setTORQUE_Mask, and masked with TORQUE_VAL_DEFAULT
-  spi_send16bit( setDRV8711( OFF, OFF_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( BLANK, BLANK_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( DECAY, DECAY_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( STALL, STALL_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( DRIVE, DRIVE_VAL ), &CS_PORT, csBit );
+  setDRV8711( csBit, CTRL, dual_ctrl_val );      // Bits 9:8 are calculated in setISGAIN_Mask, bits 6:3 are calculated in setMicrostep_Mask, and masked with CTRL_DEFAULT
+  setDRV8711( csBit, TORQUE, torque_val );    // Bits 8:0 are calculated in setTORQUE_Mask, and masked with TORQUE_VAL_DEFAULT
+  setDRV8711( csBit, OFF, OFF_VAL );
+  setDRV8711( csBit, BLANK, BLANK_VAL );
+  setDRV8711( csBit, DECAY, DECAY_VAL );
+  setDRV8711( csBit, STALL, STALL_VAL );
+  setDRV8711( csBit, DRIVE, DRIVE_VAL );
+  setDRV8711( csBit, STATUS, CLEAR_FAULTS );
   
   // setup z axis driver
   csBit = CS_Z_BIT;
   delay_ms(20); // give a little time before SPI starts
-  spi_send16bit( setDRV8711( CTRL, z_ctrl_val ), &CS_PORT, csBit );     // Bits 9:8 are calculated in setISGAIN_Mask, bits 6:3 are calculated in setMicrostep_Mask, and masked with CTRL_DEFAULT
-  spi_send16bit( setDRV8711( TORQUE, torque_val ), &CS_PORT, csBit );   // Bits 8:0 are calculated in setTORQUE_Mask, and masked with TORQUE_VAL_DEFAULT
-  spi_send16bit( setDRV8711( OFF, OFF_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( BLANK, BLANK_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( DECAY, DECAY_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( STALL, STALL_VAL ), &CS_PORT, csBit );
-  spi_send16bit( setDRV8711( DRIVE, DRIVE_VAL ), &CS_PORT, csBit );
+  setDRV8711( csBit, CTRL, z_ctrl_val );      // Bits 9:8 are calculated in setISGAIN_Mask, bits 6:3 are calculated in setMicrostep_Mask, and masked with CTRL_DEFAULT
+  setDRV8711( csBit, TORQUE, torque_val );    // Bits 8:0 are calculated in setTORQUE_Mask, and masked with TORQUE_VAL_DEFAULT
+  setDRV8711( csBit, OFF, OFF_VAL );
+  setDRV8711( csBit, BLANK, BLANK_VAL );
+  setDRV8711( csBit, DECAY, DECAY_VAL );
+  setDRV8711( csBit, STALL, STALL_VAL );
+  setDRV8711( csBit, DRIVE, DRIVE_VAL );
+  setDRV8711( csBit, STATUS, CLEAR_FAULTS );
   
 }
 
 void enableSteppers()
 {
-  spi_send16bit( setDRV8711( CTRL, x_ctrl_val | ENABLE_CTRL ), &CS_PORT, CS_X_BIT );
-  spi_send16bit( setDRV8711( CTRL, y_ctrl_val | ENABLE_CTRL ), &CS_PORT, CS_Y_BIT );
-  spi_send16bit( setDRV8711( CTRL, dual_ctrl_val | ENABLE_CTRL ), &CS_PORT, CS_DUAL_BIT );
-  spi_send16bit( setDRV8711( CTRL, z_ctrl_val | ENABLE_CTRL ), &CS_PORT, CS_Z_BIT );
+  setDRV8711( CS_X_BIT, CTRL, x_ctrl_val | ENABLE_CTRL );
+  setDRV8711( CS_Y_BIT, CTRL, y_ctrl_val | ENABLE_CTRL );
+  setDRV8711( CS_DUAL_BIT, CTRL, dual_ctrl_val | ENABLE_CTRL );
+  setDRV8711( CS_Z_BIT, CTRL, z_ctrl_val | ENABLE_CTRL );
 }
 
 void disableSteppers()
 {
-  spi_send16bit( setDRV8711( CTRL, x_ctrl_val & DISABLE_CTRL ), &CS_PORT, CS_X_BIT );
-  spi_send16bit( setDRV8711( CTRL, y_ctrl_val & DISABLE_CTRL ), &CS_PORT, CS_Y_BIT );
-  spi_send16bit( setDRV8711( CTRL, dual_ctrl_val & DISABLE_CTRL ), &CS_PORT, CS_DUAL_BIT );
-  spi_send16bit( setDRV8711( CTRL, z_ctrl_val & DISABLE_CTRL ), &CS_PORT, CS_Z_BIT );
+  setDRV8711( CS_X_BIT, CTRL, x_ctrl_val & DISABLE_CTRL );
+  setDRV8711( CS_Y_BIT, CTRL, y_ctrl_val & DISABLE_CTRL );
+  setDRV8711( CS_DUAL_BIT, CTRL, dual_ctrl_val & DISABLE_CTRL );
+  setDRV8711( CS_Z_BIT, CTRL, z_ctrl_val & DISABLE_CTRL );
 }
 
 uint16_t setMicrostep_Mask( uint16_t desiredRate )
@@ -201,18 +225,46 @@ uint16_t setTORQUE_Mask( uint8_t gain_val )
   return (uint16_t)torque & (0xff);
 }
 
-uint16_t setDRV8711( uint16_t address, uint16_t Data )
+void setDRV8711( uint8_t axis_cs, uint16_t register_address, uint16_t Data )
 {
-  uint16_t register_value = address;
-  uint16_t returnVal = register_value | (Data & 0xfff);
+  uint16_t datagram = register_address | (Data & 0xfff);  // construct the data to be sent by the spi_send16bit function
 
-  return returnVal;
+  spi_send16bit( datagram, &CS_PORT, axis_cs );           // write the data to the SPI bus, activating respective chip select line
 }
 
-uint16_t readDRV8711( uint16_t address )
+uint16_t readDRV8711( uint8_t axis_cs, uint16_t register_address )
 {
-  uint16_t register_value =  address;
-  uint16_t returnVal = register_value | 0x8000;
+  unsigned long returnValue;
+  uint16_t datagram = register_address | 0x8000;                // construct the data to be sent by the spi_send16bit function
 
-  return returnVal;
+  returnValue = spi_send16bit( datagram, &CS_PORT, axis_cs );   // write the data to the SPI bus, activating the respective chip select line,
+                                                                // and store the response back from the selected DRV8711
+  
+  return (uint16_t)returnValue;
+}
+
+ISR(FAULT_INT_vect)
+{
+  // Read the fault pins
+  uint8_t register_value = (FAULT_PIN & FAULT_MASK);
+
+  // If any of the fault pins is low (fault is active low)
+  if( register_value < FAULT_MASK )
+  {
+    uint8_t i;  // Create an iterator
+    for(i=0; i<NUM_DRIVERS; i++)  // For all motor driver fault pins
+    {
+      if( (register_value & (1<<i)) == 0 )  // If the current index's bit value is low
+      {
+        // The current index value is asserting a fault, so read the status register
+        // Read the motor driver's status register
+        uint16_t status_reg_contents = readDRV8711_test( cs_pin_array[i], STATUS );
+        // Mask only the bits that should contain data from the DRV response [7:0] and cast down to uint8_t
+        uint8_t status_fault_values = (uint8_t)(status_reg_contents 0xff);
+
+        // Print a message to the terminal
+        // report_motor_driver_fault( fault_pin_array[i], status_fault_values );
+      }
+    }
+  }
 }
