@@ -37,6 +37,98 @@
 #define DEFAULTS_X_CARVE_PRO
 #define CPU_MAP_X_CARVE_PRO
 
+#define BALL_SCREW_TESTING
+#ifdef BALL_SCREW_TESTING
+  #define CONFIG_1  // Specifies the test configuration parameters, change suffix between 1 and 4 to desired config before re-compiling
+#endif
+
+#ifdef CONFIG_1
+  #undef GRBL_VERSION_BUILD
+  #define GRBL_VERSION_BUILD    "BALL-SCREW-TESTING-CONFIG_1"
+  #define CONFIG_CURRENT_X      4.2f
+  #define CONFIG_MICRO_X        4U
+  #define CONFIG_MOTOR_STEPS_X  200
+  #define CONFIG_SCREW_LEAD_X   25.0
+  #define CONFIG_MOTOR_PULLEY_X 50
+  #define CONFIG_SCREW_PULLEY_X 50
+  #define CONFIG_CURRENT_Y      4.2f
+  #define CONFIG_MICRO_Y        4U
+  #define CONFIG_MOTOR_STEPS_Y  200
+  #define CONFIG_SCREW_LEAD_Y   25.0
+  #define CONFIG_MOTOR_PULLEY_Y 34
+  #define CONFIG_SCREW_PULLEY_Y 50
+  #define CONFIG_CURRENT_Z      5.5f
+  #define CONFIG_MICRO_Z        4U
+  #define CONFIG_MOTOR_STEPS_Z  200
+  #define CONFIG_SCREW_LEAD_Z   25.0
+  #define CONFIG_MOTOR_PULLEY_Z 50
+  #define CONFIG_SCREW_PULLEY_Z 50
+#elif defined CONFIG_2
+  #undef GRBL_VERSION_BUILD
+  #define GRBL_VERSION_BUILD    "BALL-SCREW-TESTING-CONFIG_2"
+  #define CONFIG_CURRENT_X      4.2f
+  #define CONFIG_MICRO_X        4U
+  #define CONFIG_MOTOR_STEPS_X  200
+  #define CONFIG_SCREW_LEAD_X   20.0
+  #define CONFIG_MOTOR_PULLEY_X 50
+  #define CONFIG_SCREW_PULLEY_X 50
+  #define CONFIG_CURRENT_Y      4.2f
+  #define CONFIG_MICRO_Y        4U
+  #define CONFIG_MOTOR_STEPS_Y  200
+  #define CONFIG_SCREW_LEAD_Y   20.0
+  #define CONFIG_MOTOR_PULLEY_Y 34
+  #define CONFIG_SCREW_PULLEY_Y 50
+  #define CONFIG_CURRENT_Z      5.5f
+  #define CONFIG_MICRO_Z        4U
+  #define CONFIG_MOTOR_STEPS_Z  200
+  #define CONFIG_SCREW_LEAD_Z   20.0
+  #define CONFIG_MOTOR_PULLEY_Z 50
+  #define CONFIG_SCREW_PULLEY_Z 50
+#elif defined CONFIG_3
+  #undef GRBL_VERSION_BUILD
+  #define GRBL_VERSION_BUILD    "BALL-SCREW-TESTING-CONFIG_3"
+  #define CONFIG_CURRENT_X      2.8f
+  #define CONFIG_MICRO_X        4U
+  #define CONFIG_MOTOR_STEPS_X  200
+  #define CONFIG_SCREW_LEAD_X   20.0
+  #define CONFIG_MOTOR_PULLEY_X 34
+  #define CONFIG_SCREW_PULLEY_X 50
+  #define CONFIG_CURRENT_Y      4.2f
+  #define CONFIG_MICRO_Y        8U
+  #define CONFIG_MOTOR_STEPS_Y  200
+  #define CONFIG_SCREW_LEAD_Y   20.0
+  #define CONFIG_MOTOR_PULLEY_Y 34
+  #define CONFIG_SCREW_PULLEY_Y 50
+  #define CONFIG_CURRENT_Z      5.5f
+  #define CONFIG_MICRO_Z        8U
+  #define CONFIG_MOTOR_STEPS_Z  200
+  #define CONFIG_SCREW_LEAD_Z   25.0
+  #define CONFIG_MOTOR_PULLEY_Z 50
+  #define CONFIG_SCREW_PULLEY_Z 50
+#else
+  #undef GRBL_VERSION_BUILD
+  #define GRBL_VERSION_BUILD    "BALL-SCREW-TESTING-CONFIG_4"
+  #define CONFIG_CURRENT_X      3.0f
+  #define CONFIG_MICRO_X        4U
+  #define CONFIG_MOTOR_STEPS_X  200
+  #define CONFIG_SCREW_LEAD_X   10.0
+  #define CONFIG_MOTOR_PULLEY_X 34
+  #define CONFIG_SCREW_PULLEY_X 18
+  #define CONFIG_CURRENT_Y      7.0f
+  #define CONFIG_MICRO_Y        4U
+  #define CONFIG_MOTOR_STEPS_Y  200
+  #define CONFIG_PITCH_CIRCLE_Y 1*25.4                            // 1in. circle converted to mm
+  #define CONFIG_SCREW_LEAD_Y   CONFIG_PITCH_CIRCLE_Y*3.14159265  // Pitch circle circumference of motor pulley
+  #define CONFIG_MOTOR_PULLEY_Y 20
+  #define CONFIG_SCREW_PULLEY_Y 64
+  #define CONFIG_CURRENT_Z      3.0f
+  #define CONFIG_MICRO_Z        8U
+  #define CONFIG_MOTOR_STEPS_Z  200
+  #define CONFIG_SCREW_LEAD_Z   10.0
+  #define CONFIG_MOTOR_PULLEY_Z 18
+  #define CONFIG_SCREW_PULLEY_Z 18
+#endif
+
 // Serial baud rate
 // #define BAUD_RATE 230400
 #define BAUD_RATE 115200
