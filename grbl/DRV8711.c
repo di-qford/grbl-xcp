@@ -1,11 +1,14 @@
 #include <avr/io.h>
 #include "spi.h"
 #include "grbl.h"
+#include "config.h"
 
 uint16_t setMicrostep_Mask( uint16_t desiredRate );
 uint8_t calculate_ISGAIN();
+uint8_t calculate_ISGAIN_variable_I_FS( float I_FS_val );
 uint16_t setISGAIN_Mask( uint8_t gain_val );
 uint16_t setTORQUE_Mask( uint8_t gain_val );
+uint16_t setTORQUE_Mask_variable_I_FS( uint8_t gain_val, float I_FS_val );
 
 uint16_t setDRV8711( uint16_t address, uint16_t Data );
 uint16_t readDRV8711( uint16_t address );
@@ -43,6 +46,34 @@ uint16_t y_ctrl_val = CTRL_DEFAULT;
 uint16_t dual_ctrl_val = CTRL_DEFAULT;
 uint16_t z_ctrl_val = CTRL_DEFAULT;
 
+#ifdef BALL_SCREW_TESTING
+// Create a structure type to hold axis-specific DRV configuration information
+typedef struct xcp_axis {
+  uint16_t axis_ctrl_reg_value;
+  uint16_t axis_torque_reg_value;
+} xcp_axis;
+
+// Define the number of motor driver channels with unique control inputs from the micro.
+// For XCP, this is 4 because while the Y-axes are always in sync, they do not share STEP/DIR lines and instead have unique control pins that mirror each other
+#ifdef ENABLE_DUAL_AXIS
+  #define NUM_AXES  4
+#else
+  #define NUM_AXES  3
+#endif
+
+// Initialize a list of xcp_axis variables, one for each motor driver channel
+xcp_axis axis_list[NUM_AXES];
+
+// Create a list of the control select bits for SPI bus corresponding to the axes order in the axis_list
+uint8_t csBit_list[NUM_AXES] = {CS_X_BIT, CS_Y_BIT, CS_DUAL_BIT, CS_Z_BIT};
+
+// Create a list of the microstep values corresponding to the axes order in the axis_list
+unsigned int microstep_list[NUM_AXES] = {MICROSTEPS_X, MICROSTEPS_Y, MICROSTEPS_Y, MICROSTEPS_Z};
+
+// Create a list of the motor current setpoints corresponding to the axes order in the axis_list
+float i_fs_list[NUM_AXES] = {CONFIG_CURRENT_X, CONFIG_CURRENT_Y, CONFIG_CURRENT_Y, CONFIG_CURRENT_Z};
+#endif
+
 
 void drv8711_init()
 {
@@ -64,6 +95,44 @@ void drv8711_init()
   spi_init();  // initialize the SPI port
 
 
+  #ifdef BALL_SCREW_TESTING
+    // Iterate over the number of axes to initialize the xcp_axis list
+    for( uint8_t i=0; i<NUM_AXES; i++ )
+    {
+      axis_list[i].axis_ctrl_reg_value = CTRL_DEFAULT;
+      axis_list[i].axis_torque_reg_value = TORQUE_DEFAULT;
+    }
+
+    // For each individual hardware channel configure the register contents to be written to the DRV chip
+    for( uint8_t i=0; i<NUM_AXES; i++ )
+    {
+      // Mask axis control register value with desired microstepping rate, as defined by default.h
+      axis_list[i].axis_ctrl_reg_value |= setMicrostep_Mask( microstep_list[i] );
+
+      // Calculate the value of IS_GAIN to set in CTRL register, based on I_FS for the axis and R_SENSE populated on PCB
+      uint8_t is_gain_val = calculate_ISGAIN_variable_I_FS( i_fs_list[i] );
+
+      // Mask the axis control register value with the desired IS_GAIN value
+      axis_list[i].axis_ctrl_reg_value |= setISGAIN_Mask( is_gain_val );
+
+      // Calculate the TORQUE value and set the mask to be applied to the TORQUE register contents
+      axis_list[i].axis_torque_reg_value |= setTORQUE_Mask_variable_I_FS( is_gain_val, i_fs_list[i] );
+    }
+
+    // Write the register contents to each DRV chip
+    for( uint8_t i=0; i<NUM_AXES; i++ )
+    {
+      delay_ms(20);   // give a little time before SPI starts
+      spi_send16bit( setDRV8711( CTRL, axis_list[i].axis_ctrl_reg_value ), &CS_PORT, csBit_list[i] );
+      spi_send16bit( setDRV8711( TORQUE, axis_list[i].axis_torque_reg_value ), &CS_PORT, csBit_list[i] );
+      spi_send16bit( setDRV8711( OFF, OFF_VAL ), &CS_PORT, csBit_list[i] );
+      spi_send16bit( setDRV8711( BLANK, BLANK_VAL ), &CS_PORT, csBit_list[i] );
+      spi_send16bit( setDRV8711( DECAY, DECAY_VAL ), &CS_PORT, csBit_list[i] );
+      spi_send16bit( setDRV8711( STALL, STALL_VAL ), &CS_PORT, csBit_list[i] );
+      spi_send16bit( setDRV8711( DRIVE, DRIVE_VAL ), &CS_PORT, csBit_list[i] );
+    }
+
+  #else
   // Mask axis control register values with desired microstepping rates, as defined by default.h
   x_ctrl_val |= setMicrostep_Mask( MICROSTEPS_XY );
   y_ctrl_val |= setMicrostep_Mask( MICROSTEPS_XY );
@@ -125,23 +194,38 @@ void drv8711_init()
   spi_send16bit( setDRV8711( DECAY, DECAY_VAL ), &CS_PORT, csBit );
   spi_send16bit( setDRV8711( STALL, STALL_VAL ), &CS_PORT, csBit );
   spi_send16bit( setDRV8711( DRIVE, DRIVE_VAL ), &CS_PORT, csBit );
+  #endif
   
 }
 
 void enableSteppers()
 {
+  #ifdef BALL_SCREW_TESTING
+    for( uint8_t i=0; i<NUM_AXES; i++ )
+    {
+      spi_send16bit( setDRV8711( CTRL, axis_list[i].axis_ctrl_reg_value | ENABLE_CTRL ), &CS_PORT, csBit_list[i] );
+    }
+  #else
   spi_send16bit( setDRV8711( CTRL, x_ctrl_val | ENABLE_CTRL ), &CS_PORT, CS_X_BIT );
   spi_send16bit( setDRV8711( CTRL, y_ctrl_val | ENABLE_CTRL ), &CS_PORT, CS_Y_BIT );
   spi_send16bit( setDRV8711( CTRL, dual_ctrl_val | ENABLE_CTRL ), &CS_PORT, CS_DUAL_BIT );
   spi_send16bit( setDRV8711( CTRL, z_ctrl_val | ENABLE_CTRL ), &CS_PORT, CS_Z_BIT );
+  #endif
 }
 
 void disableSteppers()
 {
+  #ifdef BALL_SCREW_TESTING
+    for( uint8_t i=0; i<NUM_AXES; i++ )
+    {
+      spi_send16bit( setDRV8711( CTRL, axis_list[i].axis_ctrl_reg_value & DISABLE_CTRL ), &CS_PORT, csBit_list[i] );
+    }
+  #else
   spi_send16bit( setDRV8711( CTRL, x_ctrl_val & DISABLE_CTRL ), &CS_PORT, CS_X_BIT );
   spi_send16bit( setDRV8711( CTRL, y_ctrl_val & DISABLE_CTRL ), &CS_PORT, CS_Y_BIT );
   spi_send16bit( setDRV8711( CTRL, dual_ctrl_val & DISABLE_CTRL ), &CS_PORT, CS_DUAL_BIT );
   spi_send16bit( setDRV8711( CTRL, z_ctrl_val & DISABLE_CTRL ), &CS_PORT, CS_Z_BIT );
+  #endif
 }
 
 uint16_t setMicrostep_Mask( uint16_t desiredRate )
@@ -179,6 +263,20 @@ uint8_t calculate_ISGAIN()
   return IS_GAIN_val;
 }
 
+uint8_t calculate_ISGAIN_variable_I_FS( float I_FS_val )
+{
+  uint8_t IS_GAIN_val = 5;  // Default value for safety
+
+  float is_gain_max = 2.75 * ((1<<TORQUE_REG_BIT_WIDTH)-1) / (256 * I_FS_val * R_SENSE);
+
+  if( is_gain_max > 40 ) { IS_GAIN_val = 40; }
+  else if( is_gain_max > 20 ) { IS_GAIN_val = 20; }
+  else if( is_gain_max > 10 ) { IS_GAIN_val = 10; }
+  else { IS_GAIN_val = 5; }
+
+  return IS_GAIN_val;
+}
+
 uint16_t setISGAIN_Mask( uint8_t gain_val )
 {
   uint16_t isgainMask;
@@ -197,6 +295,13 @@ uint16_t setISGAIN_Mask( uint8_t gain_val )
 uint16_t setTORQUE_Mask( uint8_t gain_val )
 {
   float torque = I_FS * 256 * gain_val * R_SENSE / 2.75;
+
+  return (uint16_t)torque & (0xff);
+}
+
+uint16_t setTORQUE_Mask_variable_I_FS( uint8_t gain_val, float I_FS_val )
+{
+  float torque = I_FS_val * 256 * gain_val * R_SENSE / 2.75;
 
   return (uint16_t)torque & (0xff);
 }
