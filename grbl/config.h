@@ -105,7 +105,7 @@
   #define CONFIG_SCREW_LEAD_Z   25.0
   #define CONFIG_MOTOR_PULLEY_Z 50
   #define CONFIG_SCREW_PULLEY_Z 50
-#else
+#elif defined CONFIG_4
   #undef GRBL_VERSION_BUILD
   #define GRBL_VERSION_BUILD    "BALL-SCREW-TESTING-CONFIG_4"
   #define CONFIG_CURRENT_X      3.0f
@@ -122,6 +122,132 @@
   #define CONFIG_MOTOR_PULLEY_Y 20
   #define CONFIG_SCREW_PULLEY_Y 64
   #define CONFIG_CURRENT_Z      3.0f
+  #define CONFIG_MICRO_Z        8U
+  #define CONFIG_MOTOR_STEPS_Z  200
+  #define CONFIG_SCREW_LEAD_Z   10.0
+  #define CONFIG_MOTOR_PULLEY_Z 18
+  #define CONFIG_SCREW_PULLEY_Z 18
+#elif defined CONFIG_5
+  #undef GRBL_VERSION_BUILD
+  #define GRBL_VERSION_BUILD    "BALL-SCREW-TESTING-CONFIG_5"
+  #define CONFIG_CURRENT_X      4.2f
+  #define CONFIG_MICRO_X        4U
+  #define CONFIG_MOTOR_STEPS_X  200
+  #define CONFIG_SCREW_LEAD_X   10.0
+  #define CONFIG_MOTOR_PULLEY_X 18
+  #define CONFIG_SCREW_PULLEY_X 34
+  #define CONFIG_CURRENT_Y      4.2f
+  #define CONFIG_MICRO_Y        4U
+  #define CONFIG_MOTOR_STEPS_Y  200
+  #define CONFIG_SCREW_LEAD_Y   25.0
+  #define CONFIG_MOTOR_PULLEY_Y 50
+  #define CONFIG_SCREW_PULLEY_Y 50
+  #define CONFIG_CURRENT_Z      3.0f
+  #define CONFIG_MICRO_Z        8U
+  #define CONFIG_MOTOR_STEPS_Z  200
+  #define CONFIG_SCREW_LEAD_Z   10.0
+  #define CONFIG_MOTOR_PULLEY_Z 18
+  #define CONFIG_SCREW_PULLEY_Z 18
+#elif defined CONFIG_6
+  #undef GRBL_VERSION_BUILD
+  #define GRBL_VERSION_BUILD    "BALL-SCREW-TESTING-CONFIG_6"
+  #define CONFIG_CURRENT_X      3.0f
+  #define CONFIG_MICRO_X        4U
+  #define CONFIG_MOTOR_STEPS_X  200
+  #define CONFIG_SCREW_LEAD_X   10.0
+  #define CONFIG_MOTOR_PULLEY_X 34
+  #define CONFIG_SCREW_PULLEY_X 18
+  #define CONFIG_CURRENT_Y      3.0f
+  #define CONFIG_MICRO_Y        4U
+  #define CONFIG_MOTOR_STEPS_Y  200
+  #define CONFIG_SCREW_LEAD_Y   25.0
+  #define CONFIG_MOTOR_PULLEY_Y 50
+  #define CONFIG_SCREW_PULLEY_Y 50
+  #define CONFIG_CURRENT_Z      3.0f
+  #define CONFIG_MICRO_Z        8U
+  #define CONFIG_MOTOR_STEPS_Z  200
+  #define CONFIG_SCREW_LEAD_Z   10.0
+  #define CONFIG_MOTOR_PULLEY_Z 18
+  #define CONFIG_SCREW_PULLEY_Z 18
+#elif defined CONFIG_7
+  #undef GRBL_VERSION_BUILD
+  #define GRBL_VERSION_BUILD    "BALL-SCREW-TESTING-CONFIG_7"
+  #define CONFIG_CURRENT_X      4.0f
+  #define CONFIG_MICRO_X        4U
+  #define CONFIG_MOTOR_STEPS_X  200
+  #define CONFIG_SCREW_LEAD_X   10.0
+  #define CONFIG_MOTOR_PULLEY_X 34
+  #define CONFIG_SCREW_PULLEY_X 18
+  #define CONFIG_CURRENT_Y      4.0f
+  #define CONFIG_MICRO_Y        4U
+  #define CONFIG_MOTOR_STEPS_Y  200
+  #define CONFIG_SCREW_LEAD_Y   25.0
+  #define CONFIG_MOTOR_PULLEY_Y 50
+  #define CONFIG_SCREW_PULLEY_Y 50
+  #define CONFIG_CURRENT_Z      3.0f
+  #define CONFIG_MICRO_Z        8U
+  #define CONFIG_MOTOR_STEPS_Z  200
+  #define CONFIG_SCREW_LEAD_Z   10.0
+  #define CONFIG_MOTOR_PULLEY_Z 18
+  #define CONFIG_SCREW_PULLEY_Z 18
+#elif defined CONFIG_8
+  #undef GRBL_VERSION_BUILD
+  #define GRBL_VERSION_BUILD    "BALL-SCREW-TESTING-CONFIG_8"
+  #define CONFIG_CURRENT_X      4.2f
+  #define CONFIG_MICRO_X        4U
+  #define CONFIG_MOTOR_STEPS_X  200
+  #define CONFIG_SCREW_LEAD_X   10.0
+  #define CONFIG_MOTOR_PULLEY_X 18
+  #define CONFIG_SCREW_PULLEY_X 34
+  #define CONFIG_CURRENT_Y      4.2f
+  #define CONFIG_MICRO_Y        4U
+  #define CONFIG_MOTOR_STEPS_Y  200
+  #define CONFIG_SCREW_LEAD_Y   25.0
+  #define CONFIG_MOTOR_PULLEY_Y 50
+  #define CONFIG_SCREW_PULLEY_Y 50
+  #define CONFIG_CURRENT_Z      4.2f
+  #define CONFIG_MICRO_Z        8U
+  #define CONFIG_MOTOR_STEPS_Z  200
+  #define CONFIG_SCREW_LEAD_Z   10.0
+  #define CONFIG_MOTOR_PULLEY_Z 18
+  #define CONFIG_SCREW_PULLEY_Z 18
+#elif defined CONFIG_9
+  #undef GRBL_VERSION_BUILD
+  #define GRBL_VERSION_BUILD    "BALL-SCREW-TESTING-CONFIG_9"
+  #define CONFIG_CURRENT_X      3.0f
+  #define CONFIG_MICRO_X        4U
+  #define CONFIG_MOTOR_STEPS_X  200
+  #define CONFIG_SCREW_LEAD_X   10.0
+  #define CONFIG_MOTOR_PULLEY_X 34
+  #define CONFIG_SCREW_PULLEY_X 18
+  #define CONFIG_CURRENT_Y      3.0f
+  #define CONFIG_MICRO_Y        4U
+  #define CONFIG_MOTOR_STEPS_Y  200
+  #define CONFIG_SCREW_LEAD_Y   25.0
+  #define CONFIG_MOTOR_PULLEY_Y 50
+  #define CONFIG_SCREW_PULLEY_Y 50
+  #define CONFIG_CURRENT_Z      3.0f
+  #define CONFIG_MICRO_Z        8U
+  #define CONFIG_MOTOR_STEPS_Z  200
+  #define CONFIG_SCREW_LEAD_Z   10.0
+  #define CONFIG_MOTOR_PULLEY_Z 18
+  #define CONFIG_SCREW_PULLEY_Z 18
+#else
+  #undef GRBL_VERSION_BUILD
+  #define GRBL_VERSION_BUILD    "BALL-SCREW-TESTING-CONFIG_10"
+  #define CONFIG_CURRENT_X      4.0f
+  #define CONFIG_MICRO_X        4U
+  #define CONFIG_MOTOR_STEPS_X  200
+  #define CONFIG_SCREW_LEAD_X   10.0
+  #define CONFIG_MOTOR_PULLEY_X 34
+  #define CONFIG_SCREW_PULLEY_X 18
+  #define CONFIG_CURRENT_Y      4.0f
+  #define CONFIG_MICRO_Y        4U
+  #define CONFIG_MOTOR_STEPS_Y  200
+  #define CONFIG_SCREW_LEAD_Y   25.0
+  #define CONFIG_MOTOR_PULLEY_Y 50
+  #define CONFIG_SCREW_PULLEY_Y 50
+  #define CONFIG_CURRENT_Z      4.0f
   #define CONFIG_MICRO_Z        8U
   #define CONFIG_MOTOR_STEPS_Z  200
   #define CONFIG_SCREW_LEAD_Z   10.0
